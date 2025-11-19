@@ -5,6 +5,8 @@
 単一のリモート Git リポジトリからベース clone を 1 度だけ作成し、各タスク用に複製ディレクトリを管理する CLI です。
 `base-repo/` と `workspaces/<task>/` を構築し、タスク単位で clone を増減できます。
 
+> **注意**: `init` 後は自動でベース clone を更新しません。新しいコミットを反映したい場合は `base-repo` に移動し、`git fetch origin` などで手動同期してから `add` を実行してください。
+
 ## ビルド
 
 ```bash
