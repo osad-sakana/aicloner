@@ -4,34 +4,29 @@
 
 単一のリモート Git リポジトリから各タスク専用の clone を生成し、`workspaces/<task>/` 配下で管理します。`add` 実行時にはタスク名と同じ Git ブランチを自動作成するため、タスクごとの作業内容をそのままブランチとして扱えます。
 
-## ビルド
+## バイナリ配布版のインストール
+
+GitHub Release から OS に対応したアーカイブを取得し、解凍したバイナリをお好みの場所へ配置してください。ファイル名は以下の通りです。
+
+- `aicloner-linux-x86_64.tar.gz`
+- `aicloner-macos-arm64.tar.gz`
+- `aicloner-windows-x86_64.zip`
+
+典型的な利用例:
 
 ```bash
-cargo build --release
+# Linux / macOS
+curl -L -o aicloner.tar.gz https://github.com/osad-sakana/aicloner/releases/download/v0.1.0/aicloner-linux-x86_64.tar.gz
+tar -xf aicloner.tar.gz
+install -m 755 aicloner ~/bin/aicloner
+
+# Windows (PowerShell)
+Invoke-WebRequest -OutFile aicloner.zip https://github.com/osad-sakana/aicloner/releases/download/v0.1.0/aicloner-windows-x86_64.zip
+Expand-Archive aicloner.zip
+Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ```
 
-生成物は `target/release/aicloner` です。以降の例ではカレントディレクトリ直下のバイナリを実行すると想定しています。
-
-## インストール
-
-ローカルにインストールする場合は、Cargo の `install` を使うと `~/.cargo/bin` に配置されます。
-
-```bash
-cargo install --path . --locked
-```
-
-独自の場所に置きたい場合は、`cargo build --release` 後に `target/release/aicloner` を任意のディレクトリへコピーし、`PATH` に追加してください。
-
-## アップデート
-
-最新版に差し替えるには、作業ツリーで最新のソースを取得したうえで同じコマンドを再実行します。
-
-```bash
-git pull origin main  # 必要に応じて
-cargo install --path . --locked --force
-```
-
-すでにバイナリを手動配置している場合は、再ビルド後に新しいバイナリで上書きしてください。
+`PATH` が通った場所へ配置したら `aicloner --help` で動作を確認できます。
 
 ## 初期化 `init`
 
@@ -98,3 +93,48 @@ cd ..
 ```
 
 任意のシェルエイリアス（例: `ws(){ cd workspaces/$1; }`）を設定すると移動を簡略化できます。
+
+## 開発者向け情報
+
+### ソースからのビルド
+
+```bash
+cargo build --release
+```
+
+生成物は `target/release/aicloner` です。カレントディレクトリ直下のバイナリを利用する想定です。
+
+### ローカルインストール
+
+```bash
+cargo install --path . --locked
+```
+
+`~/.cargo/bin` に配置されます。別の場所に置きたい場合はビルド済みバイナリをコピーし、`PATH` に追加してください。
+
+### 開発版アップデート
+
+```bash
+git pull origin main  # 必要に応じて
+cargo install --path . --locked --force
+```
+
+手動配置の場合も再ビルド後に新しいバイナリで上書きしてください。
+
+### リリース (GitHub Actions)
+
+`v*` 形式のタグを push すると GitHub Actions が自動的に実行され、Linux/macOS/Windows 向けのバイナリをビルドして GitHub Release に添付します。成果物は以下のファイル名でアップロードされます。
+
+- `aicloner-linux-x86_64.tar.gz`
+- `aicloner-macos-arm64.tar.gz`
+- `aicloner-windows-x86_64.zip`
+
+実行手順の例:
+
+```bash
+# バージョンを更新したコミットを push 済みと仮定
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+タグが作成されると `Release` Workflow が走り、成果物付きの Release が自動的に公開されます。
