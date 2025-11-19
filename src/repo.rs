@@ -22,10 +22,6 @@ impl RepoManager {
         }
     }
 
-    pub fn base_dir(&self) -> PathBuf {
-        self.resolve_path(&self.config.base_dir)
-    }
-
     pub fn workspaces_dir(&self) -> PathBuf {
         self.resolve_path(&self.config.workspaces_dir)
     }
@@ -40,36 +36,7 @@ impl RepoManager {
         base.join(relative)
     }
 
-    pub fn init_base_repo(&self) -> Result<()> {
-        let base_dir = self.base_dir();
-        // base ディレクトリの状態に応じて clone または fetch を実行
-        if !base_dir.exists() {
-            if let Some(parent) = base_dir.parent() {
-                fs::create_dir_all(parent).with_context(|| {
-                    format!(
-                        "ベースレポジトリ親ディレクトリの作成に失敗しました: {}",
-                        parent.display()
-                    )
-                })?;
-            }
-            let base_dir_str = base_dir.display().to_string();
-            let args = vec![
-                "clone".to_string(),
-                self.config.repo_url.clone(),
-                base_dir_str.clone(),
-            ];
-            run_command("git", &args, None)?;
-        } else {
-            let base_dir_str = base_dir.display().to_string();
-            let args = vec![
-                "-C".to_string(),
-                base_dir_str.clone(),
-                "fetch".to_string(),
-                "--all".to_string(),
-            ];
-            run_command("git", &args, None)?;
-        }
-
+    pub fn init_environment(&self) -> Result<()> {
         let workspaces_dir = self.workspaces_dir();
         fs::create_dir_all(&workspaces_dir).with_context(|| {
             format!(
@@ -81,13 +48,6 @@ impl RepoManager {
     }
 
     pub fn create_task_clone(&self, task_name: &str, base_branch: &str) -> Result<()> {
-        let base_dir = self.base_dir();
-        if !base_dir.exists() {
-            bail!(
-                "ベースレポジトリが存在しません。先に init を実行してください: {}",
-                base_dir.display()
-            );
-        }
         let workspaces_dir = self.workspaces_dir();
         if !workspaces_dir.exists() {
             bail!(
@@ -106,39 +66,33 @@ impl RepoManager {
         }
 
         let repo_dir_str = workspace_dir.display().to_string();
-        let base_dir_str = base_dir.display().to_string();
 
-        let reference_args = vec![
+        let clone_args = vec![
             "clone".to_string(),
-            "--reference".to_string(),
-            base_dir_str.clone(),
+            "--branch".to_string(),
+            base_branch.to_string(),
+            "--single-branch".to_string(),
             self.config.repo_url.clone(),
             repo_dir_str.clone(),
         ];
-
-        // --reference を使った clone が失敗した場合は通常 clone に切り替える
-        if let Err(err) = run_command("git", &reference_args, None) {
-            eprintln!("参照付き clone に失敗したためリモート clone にフォールバックします: {err}");
+        run_command("git", &clone_args, None).map_err(|err| {
             if workspace_dir.exists() {
                 let _ = fs::remove_dir_all(&workspace_dir);
             }
-            let fallback_args = vec![
-                "clone".to_string(),
-                self.config.repo_url.clone(),
-                repo_dir_str.clone(),
-            ];
-            run_command("git", &fallback_args, None)?;
-        }
+            err
+        })?;
 
-        let checkout_args = vec![
+        let branch_args = vec![
             "-C".to_string(),
             repo_dir_str.clone(),
             "checkout".to_string(),
-            base_branch.to_string(),
+            "-b".to_string(),
+            task_name.to_string(),
         ];
-        run_command("git", &checkout_args, None)?;
+        run_command("git", &branch_args, None)?;
         println!(
-            "タスク \"{}\" の clone を作成しました: {}",
+            "タスク \"{}\" 用のワークスペースとブランチ \"{}\" を作成しました: {}",
+            task_name,
             task_name,
             workspace_dir.display()
         );

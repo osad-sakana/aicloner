@@ -7,7 +7,7 @@
 - CLI 上で作業している前提のため、結果報告では過度な装飾を避け、要点を短く伝えます。
 
 ## プロジェクト概要
-- Rust 製 CLI ツール `aicloner` は、単一のリモート Git リポジトリから 1 度だけベース clone を作成し、タスクごとに複製ディレクトリを管理します。
+- Rust 製 CLI ツール `aicloner` は、単一のリモート Git リポジトリからタスクごとに新規 clone を作成し、`workspaces/<task>` で管理します。タスク追加時にタスク名と同名の Git ブランチを自動作成します。
 - 主なモジュール構成: `src/cli.rs` (CLI 定義), `src/config.rs` (設定ファイルの読み書き), `src/repo.rs` (リポジトリ操作), `src/main.rs` (エントリーポイント)。
 - 設定ファイル `.aicloner.toml` はリポジトリには含まれておらず、実行時に作成されます。
 
@@ -17,7 +17,7 @@
 - 実行例: `./target/release/aicloner <subcommand> ...`
 
 ## 開発時の注意
-- `src/repo.rs` では Git コマンドを直接呼び出しているため、外部コマンドのエラー処理やログ出力が崩れないよう注意してください。
+- `src/repo.rs` では Git コマンドを直接呼び出しており、`add` で `git clone --branch <from> --single-branch` → `git checkout -b <task>` の順番を維持します。外部コマンドのエラー処理やログ出力が崩れないよう注意してください。
 - 設定ファイルの保存先ディレクトリが存在しない場合、自動的に `create_dir_all` で作成する仕様を維持します。
 - `list` サブコマンドではワークスペース直下の各ディレクトリに対して `git rev-parse --abbrev-ref HEAD` を実行しており、失敗時はブランチ名を `-` と表示します。
 

@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub repo_url: String,
-    pub base_dir: String,
     pub workspaces_dir: String,
 }
 

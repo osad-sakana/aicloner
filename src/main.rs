@@ -21,13 +21,12 @@ fn main() -> Result<()> {
             let config_path = args.config;
             let config = Config {
                 repo_url: args.repo_url,
-                base_dir: args.base_dir,
                 workspaces_dir: args.workspaces_dir,
             };
-            // init は設定ファイルを書いたあとベースレポジトリを準備
+            // init は設定ファイルを書いたあとワークスペース用のディレクトリを準備
             config.save(&config_path)?;
             let manager = RepoManager::new(config, config_path.clone());
-            manager.init_base_repo()?;
+            manager.init_environment()?;
             println!("設定を {} に保存しました。", config_path.display());
         }
         Commands::Add(args) => {

@@ -27,8 +27,6 @@ pub enum Commands {
 pub struct InitArgs {
     #[arg(long = "repo-url", value_name = "URL")]
     pub repo_url: String,
-    #[arg(long = "base-dir", default_value = "base-repo", value_name = "PATH")]
-    pub base_dir: String,
     #[arg(
         long = "workspaces-dir",
         default_value = "workspaces",

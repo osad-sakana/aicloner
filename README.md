@@ -1,11 +1,8 @@
 # aicloner
 
-コーディング CLI を複数タスクで同時に走らせる際、毎回 clone する手間やディスク容量を抑えたいという課題から生まれたツールです。1 つのベース clone を共有しつつ、タスクごとに独立したワークスペースを素早く用意・破棄できるように設計されています。
+コーディング CLI を複数タスクで同時に走らせる際、毎回 clone する手間をコマンド 1 つで完了させるためのツールです。タスクを追加するたびにリモートの最新ブランチから新しい clone を作成し、ワークスペースを素早く用意・破棄できます。
 
-単一のリモート Git リポジトリからベース clone を 1 度だけ作成し、各タスク用に複製ディレクトリを管理する CLI です。
-`base-repo/` と `workspaces/<task>/` を構築し、タスク単位で clone を増減できます。
-
-> **注意**: `init` 後は自動でベース clone を更新しません。新しいコミットを反映したい場合は `base-repo` に移動し、`git fetch origin` などで手動同期してから `add` を実行してください。
+単一のリモート Git リポジトリから各タスク専用の clone を生成し、`workspaces/<task>/` 配下で管理します。`add` 実行時にはタスク名と同じ Git ブランチを自動作成するため、タスクごとの作業内容をそのままブランチとして扱えます。
 
 ## ビルド
 
@@ -40,13 +37,12 @@ cargo install --path . --locked --force
 
 ```bash
 ./target/release/aicloner init --repo-url git@github.com:owner/repo.git \
-    --base-dir ./base-repo \
     --workspaces-dir ./workspaces \
     --config ./.aicloner.toml
 ```
 
-- `--repo-url` は必須。デフォルトでは `base-repo`・`workspaces`・`.aicloner.toml` が使われます。
-- ベースディレクトリが無ければ `git clone`、あれば `git -C base-repo fetch --all` で更新します。
+- `--repo-url` は必須。`workspaces`・`.aicloner.toml` がデフォルトです。
+- ワークスペースディレクトリが無い場合は自動作成します。
 - 設定ファイルは常に上書き保存されます。
 
 ## タスク clone 追加 `add`
@@ -55,8 +51,8 @@ cargo install --path . --locked --force
 ./target/release/aicloner add login-ui --from main --config ./.aicloner.toml
 ```
 
-- `workspaces/login-ui` を clone 先として作成し、まず `git clone --reference base-repo ...` を試み、失敗時は通常 clone にフォールバックします。
-- clone 後に `git checkout <branch>` を実行します（デフォルト `main`）。
+- リモートリポジトリから `--from`（デフォルト `main`）を `--single-branch` で clone します。
+- clone 完了後にタスク名（この例では `login-ui`）のブランチを `git checkout -b <task_name>` で自動作成し、直ちに切り替えます。
 - 同名ディレクトリが存在する場合はエラーになります。
 
 ## タスク clone 削除 `rm`
@@ -82,7 +78,6 @@ cargo install --path . --locked --force
 
 ```toml
 repo_url = "git@github.com:owner/repo.git"
-base_dir = "base-repo"
 workspaces_dir = "workspaces"
 ```
 
@@ -96,10 +91,10 @@ workspaces_dir = "workspaces"
 cd workspaces/<task_name>
 ```
 
-作業後にベース clone へ戻る場合:
+作業後にワークスペースルートへ戻る場合:
 
 ```bash
-cd ../../base-repo
+cd ..
 ```
 
 任意のシェルエイリアス（例: `ws(){ cd workspaces/$1; }`）を設定すると移動を簡略化できます。
