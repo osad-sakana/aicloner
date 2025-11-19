@@ -104,15 +104,8 @@ impl RepoManager {
                 workspace_dir.display()
             );
         }
-        fs::create_dir_all(&workspace_dir).with_context(|| {
-            format!(
-                "ワークスペースディレクトリの作成に失敗しました: {}",
-                workspace_dir.display()
-            )
-        })?;
 
-        let repo_dir = workspace_dir.join("repo");
-        let repo_dir_str = repo_dir.display().to_string();
+        let repo_dir_str = workspace_dir.display().to_string();
         let base_dir_str = base_dir.display().to_string();
 
         let reference_args = vec![
@@ -126,8 +119,8 @@ impl RepoManager {
         // --reference を使った clone が失敗した場合は通常 clone に切り替える
         if let Err(err) = run_command("git", &reference_args, None) {
             eprintln!("参照付き clone に失敗したためリモート clone にフォールバックします: {err}");
-            if repo_dir.exists() {
-                let _ = fs::remove_dir_all(&repo_dir);
+            if workspace_dir.exists() {
+                let _ = fs::remove_dir_all(&workspace_dir);
             }
             let fallback_args = vec![
                 "clone".to_string(),
@@ -147,7 +140,7 @@ impl RepoManager {
         println!(
             "タスク \"{}\" の clone を作成しました: {}",
             task_name,
-            repo_dir.display()
+            workspace_dir.display()
         );
         Ok(())
     }
@@ -215,10 +208,9 @@ impl RepoManager {
                 continue;
             }
             let name = entry.file_name().to_string_lossy().to_string();
-            let repo_path = path.join("repo");
-            // repo ディレクトリがある場合のみ HEAD ブランチを問い合わせる
-            let branch = if repo_path.exists() {
-                let repo_str = repo_path.display().to_string();
+            // タスクディレクトリ自体が clone 先
+            let branch = if path.exists() {
+                let repo_str = path.display().to_string();
                 let args = vec![
                     "-C".to_string(),
                     repo_str.clone(),
@@ -236,7 +228,7 @@ impl RepoManager {
 
             tasks.push(TaskInfo {
                 name,
-                path: repo_path,
+                path: path.clone(),
                 branch,
             });
         }

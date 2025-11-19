@@ -1,7 +1,7 @@
 # aicloner
 
 単一のリモート Git リポジトリからベース clone を 1 度だけ作成し、各タスク用に複製ディレクトリを管理する CLI です。  
-`base-repo/` と `workspaces/<task>/repo/` を構築し、タスク単位で clone を増減できます。
+`base-repo/` と `workspaces/<task>/` を構築し、タスク単位で clone を増減できます。
 
 ## ビルド
 
@@ -51,7 +51,7 @@ cargo install --path . --locked --force
 ./target/release/aicloner add login-ui --from main --config ./.aicloner.toml
 ```
 
-- `workspaces/login-ui/repo` を作成し、まず `git clone --reference base-repo ...` を試み、失敗時は通常 clone にフォールバックします。
+- `workspaces/login-ui` を clone 先として作成し、まず `git clone --reference base-repo ...` を試み、失敗時は通常 clone にフォールバックします。
 - clone 後に `git checkout <branch>` を実行します（デフォルト `main`）。
 - 同名ディレクトリが存在する場合はエラーになります。
 
@@ -70,7 +70,7 @@ cargo install --path . --locked --force
 ./target/release/aicloner list --config ./.aicloner.toml
 ```
 
-- `workspaces` 直下の各タスク名と `repo` のパス、現在のブランチ（取得できた場合）を表形式で出力します。
+- `workspaces` 直下の各タスク名とディレクトリパス、現在のブランチ（取得できた場合）を表形式で出力します。
 
 ## 設定ファイル
 
@@ -83,3 +83,19 @@ workspaces_dir = "workspaces"
 ```
 
 相対パスは設定ファイルの設置場所を起点に解決されます。複数の設定ファイルを用意して別々のリポジトリを管理することも可能です。
+
+## ディレクトリ移動の例
+
+タスク用 clone へ移動し作業する場合:
+
+```bash
+cd workspaces/<task_name>
+```
+
+作業後にベース clone へ戻る場合:
+
+```bash
+cd ../../base-repo
+```
+
+任意のシェルエイリアス（例: `ws(){ cd workspaces/$1; }`）を設定すると移動を簡略化できます。
