@@ -205,11 +205,18 @@ fn run_command(program: &str, args: &[String], dir: Option<&Path>) -> Result<()>
         command.current_dir(dir);
     }
     command.args(args);
-    let status = command
-        .status()
+    let output = command
+        .output()
         .with_context(|| format!("コマンドの起動に失敗しました: {}", program))?;
-    if !status.success() {
-        bail!("コマンドが失敗しました: {} {}", program, join_args(args));
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        bail!(
+            "コマンドが失敗しました: {} {}\nstatus: {}\nstderr: {}",
+            program,
+            join_args(args),
+            output.status,
+            stderr
+        );
     }
     Ok(())
 }
@@ -226,7 +233,14 @@ fn run_command_capture(program: &str, args: &[String], dir: Option<&Path>) -> Re
         .output()
         .with_context(|| format!("コマンドの起動に失敗しました: {}", program))?;
     if !output.status.success() {
-        bail!("コマンドが失敗しました: {} {}", program, join_args(args));
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        bail!(
+            "コマンドが失敗しました: {} {}\nstatus: {}\nstderr: {}",
+            program,
+            join_args(args),
+            output.status,
+            stderr
+        );
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
