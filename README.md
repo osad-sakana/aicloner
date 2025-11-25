@@ -47,7 +47,7 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ```
 
 - リモートリポジトリから `--from`（デフォルト `main`）を `--single-branch` で clone します。
-- clone 完了後にタスク名（この例では `login-ui`）のブランチを `git checkout -b <task_name>` で自動作成し、直ちに切り替えます。
+- 同名のブランチがリモートに存在する場合はそのブランチを clone し、存在しない場合のみ `--from` から `git checkout -b <task_name>` で新規作成します。
 - 同名ディレクトリが存在する場合はエラーになります。
 
 ## タスク clone 削除 `rm`

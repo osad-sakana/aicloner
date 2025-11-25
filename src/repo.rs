@@ -67,10 +67,17 @@ impl RepoManager {
 
         let repo_dir_str = workspace_dir.display().to_string();
 
+        let remote_branch_exists = self.remote_branch_exists(task_name)?;
+        let clone_branch = if remote_branch_exists {
+            task_name.to_string()
+        } else {
+            base_branch.to_string()
+        };
+
         let clone_args = vec![
             "clone".to_string(),
             "--branch".to_string(),
-            base_branch.to_string(),
+            clone_branch.clone(),
             "--single-branch".to_string(),
             self.config.repo_url.clone(),
             repo_dir_str.clone(),
@@ -82,20 +89,28 @@ impl RepoManager {
             err
         })?;
 
-        let branch_args = vec![
-            "-C".to_string(),
-            repo_dir_str.clone(),
-            "checkout".to_string(),
-            "-b".to_string(),
-            task_name.to_string(),
-        ];
-        run_command("git", &branch_args, None)?;
-        println!(
-            "タスク \"{}\" 用のワークスペースとブランチ \"{}\" を作成しました: {}",
-            task_name,
-            task_name,
-            workspace_dir.display()
-        );
+        if remote_branch_exists {
+            println!(
+                "タスク \"{}\" 用のワークスペースをリモートブランチから取得しました: {}",
+                task_name,
+                workspace_dir.display()
+            );
+        } else {
+            let branch_args = vec![
+                "-C".to_string(),
+                repo_dir_str.clone(),
+                "checkout".to_string(),
+                "-b".to_string(),
+                task_name.to_string(),
+            ];
+            run_command("git", &branch_args, None)?;
+            println!(
+                "タスク \"{}\" 用のワークスペースとブランチ \"{}\" を作成しました: {}",
+                task_name,
+                task_name,
+                workspace_dir.display()
+            );
+        }
         Ok(())
     }
 
@@ -195,6 +210,20 @@ pub struct TaskInfo {
     pub name: String,
     pub path: PathBuf,
     pub branch: Option<String>,
+}
+
+impl RepoManager {
+    fn remote_branch_exists(&self, branch: &str) -> Result<bool> {
+        let pattern = format!("refs/heads/{}", branch);
+        let args = vec![
+            "ls-remote".to_string(),
+            "--heads".to_string(),
+            self.config.repo_url.clone(),
+            pattern,
+        ];
+        let output = run_command_capture("git", &args, None)?;
+        Ok(!output.trim().is_empty())
+    }
 }
 
 fn run_command(program: &str, args: &[String], dir: Option<&Path>) -> Result<()> {

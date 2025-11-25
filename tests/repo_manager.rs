@@ -13,6 +13,7 @@ use tempfile::TempDir;
 fn create_clone_and_list_returns_branch() -> Result<()> {
     let tmp = TempDir::new()?;
     let remote = init_remote_repo(&tmp)?;
+    create_remote_branch_with_commit(&remote, "task-a", "feature")?;
 
     let config_path = tmp.path().join(".aicloner.toml");
     let config = Config {
@@ -28,6 +29,8 @@ fn create_clone_and_list_returns_branch() -> Result<()> {
     assert!(workspace.exists());
     let branch = current_branch(&workspace)?;
     assert_eq!(branch, "task-a");
+    let content = fs::read_to_string(workspace.join("README.md"))?;
+    assert_eq!(content, "feature\n");
 
     let tasks = manager.list_tasks()?;
     assert_eq!(tasks.len(), 1);
@@ -58,6 +61,30 @@ fn clone_failure_shows_stderr_and_cleans_directory() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn create_new_branch_when_remote_missing() -> Result<()> {
+    let tmp = TempDir::new()?;
+    let remote = init_remote_repo(&tmp)?;
+
+    let config_path = tmp.path().join(".aicloner.toml");
+    let config = Config {
+        repo_url: remote.to_string_lossy().to_string(),
+        workspaces_dir: "ws".to_string(),
+    };
+    let manager = RepoManager::new(config, config_path);
+    manager.init_environment()?;
+
+    manager.create_task_clone("task-new", "main")?;
+
+    let workspace = manager.workspaces_dir().join("task-new");
+    assert!(workspace.exists());
+    let branch = current_branch(&workspace)?;
+    assert_eq!(branch, "task-new");
+    let content = fs::read_to_string(workspace.join("README.md"))?;
+    assert_eq!(content, "hello\n");
+    Ok(())
+}
+
 fn init_remote_repo(tmp: &TempDir) -> Result<PathBuf> {
     let remote = tmp.path().join("remote.git");
     run_git(&["init", "--bare", remote.to_string_lossy().as_ref()], None)?;
@@ -79,6 +106,19 @@ fn init_remote_repo(tmp: &TempDir) -> Result<PathBuf> {
     )?;
     run_git(&["push", "origin", "main"], Some(&seed))?;
     Ok(remote)
+}
+
+fn create_remote_branch_with_commit(remote: &Path, branch: &str, content: &str) -> Result<()> {
+    let tmp = TempDir::new()?;
+    let work = tmp.path().join("work");
+    run_git(&["clone", remote.to_string_lossy().as_ref(), work.to_string_lossy().as_ref()], None)?;
+    run_git(&["checkout", "-b", branch], Some(&work))?;
+    let mut file = fs::File::create(work.join("README.md"))?;
+    writeln!(file, "{content}")?;
+    run_git(&["add", "README.md"], Some(&work))?;
+    run_git(&["commit", "-m", "feat"], Some(&work))?;
+    run_git(&["push", "origin", branch], Some(&work))?;
+    Ok(())
 }
 
 fn current_branch(repo: &Path) -> Result<String> {
