@@ -29,7 +29,7 @@ pub struct InitArgs {
     pub repo_url: String,
     #[arg(
         long = "workspaces-dir",
-        default_value = "workspaces",
+        default_value = "ws",
         value_name = "PATH"
     )]
     pub workspaces_dir: String,

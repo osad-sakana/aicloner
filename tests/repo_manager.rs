@@ -17,7 +17,7 @@ fn create_clone_and_list_returns_branch() -> Result<()> {
     let config_path = tmp.path().join(".aicloner.toml");
     let config = Config {
         repo_url: remote.to_string_lossy().to_string(),
-        workspaces_dir: "workspaces".to_string(),
+        workspaces_dir: "ws".to_string(),
     };
     let manager = RepoManager::new(config, config_path);
     manager.init_environment()?;
@@ -44,7 +44,7 @@ fn clone_failure_shows_stderr_and_cleans_directory() -> Result<()> {
     let config_path = tmp.path().join(".aicloner.toml");
     let config = Config {
         repo_url: remote.to_string_lossy().to_string(),
-        workspaces_dir: "workspaces".to_string(),
+        workspaces_dir: "ws".to_string(),
     };
     let manager = RepoManager::new(config, config_path);
     manager.init_environment()?;

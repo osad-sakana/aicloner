@@ -2,7 +2,7 @@
 
 コーディング CLI を複数タスクで同時に走らせる際、毎回 clone する手間をコマンド 1 つで完了させるためのツールです。タスクを追加するたびにリモートの最新ブランチから新しい clone を作成し、ワークスペースを素早く用意・破棄できます。
 
-単一のリモート Git リポジトリから各タスク専用の clone を生成し、`workspaces/<task>/` 配下で管理します。`add` 実行時にはタスク名と同じ Git ブランチを自動作成するため、タスクごとの作業内容をそのままブランチとして扱えます。
+単一のリモート Git リポジトリから各タスク専用の clone を生成し、`ws/<task>/` 配下で管理します。`add` 実行時にはタスク名と同じ Git ブランチを自動作成するため、タスクごとの作業内容をそのままブランチとして扱えます。
 
 ## バイナリ配布版のインストール
 
@@ -32,11 +32,11 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 
 ```bash
 ./target/release/aicloner init --repo-url git@github.com:owner/repo.git \
-    --workspaces-dir ./workspaces \
+    --workspaces-dir ./ws \
     --config ./.aicloner.toml
 ```
 
-- `--repo-url` は必須。`workspaces`・`.aicloner.toml` がデフォルトです。
+- `--repo-url` は必須。`ws`・`.aicloner.toml` がデフォルトです。
 - ワークスペースディレクトリが無い場合は自動作成します。
 - 設定ファイルは常に上書き保存されます。
 
@@ -57,7 +57,7 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ```
 
 - `--force` を付けない場合は `y` で確認が必要です。
-- `workspaces/<task>` ディレクトリが無い場合はエラーになります。
+- `ws/<task>` ディレクトリが無い場合はエラーになります。
 
 ## 一覧表示 `list`
 
@@ -65,7 +65,7 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ./target/release/aicloner list --config ./.aicloner.toml
 ```
 
-- `workspaces` 直下の各タスク名とディレクトリパス、現在のブランチ（取得できた場合）を表形式で出力します。
+- `ws` 直下の各タスク名とディレクトリパス、現在のブランチ（取得できた場合）を表形式で出力します。
 
 ## 設定ファイル
 
@@ -73,7 +73,7 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 
 ```toml
 repo_url = "git@github.com:owner/repo.git"
-workspaces_dir = "workspaces"
+workspaces_dir = "ws"
 ```
 
 相対パスは設定ファイルの設置場所を起点に解決されます。複数の設定ファイルを用意して別々のリポジトリを管理することも可能です。
@@ -83,7 +83,7 @@ workspaces_dir = "workspaces"
 タスク用 clone へ移動し作業する場合:
 
 ```bash
-cd workspaces/<task_name>
+cd ws/<task_name>
 ```
 
 作業後にワークスペースルートへ戻る場合:
@@ -92,7 +92,7 @@ cd workspaces/<task_name>
 cd ..
 ```
 
-任意のシェルエイリアス（例: `ws(){ cd workspaces/$1; }`）を設定すると移動を簡略化できます。
+任意のシェルエイリアス（例: `ws(){ cd ws/$1; }`）を設定すると移動を簡略化できます。
 
 ## 開発者向け情報
 
