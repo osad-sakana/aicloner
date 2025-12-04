@@ -25,13 +25,11 @@ pub enum Commands {
 
 #[derive(Debug, Args)]
 pub struct InitArgs {
-    #[arg(long = "repo-url", value_name = "URL")]
+    #[arg(value_name = "URL")]
     pub repo_url: String,
-    #[arg(
-        long = "workspaces-dir",
-        default_value = "ws",
-        value_name = "PATH"
-    )]
+    #[arg(long = "base-dir", default_value = "base", value_name = "PATH")]
+    pub base_dir: String,
+    #[arg(long = "workspaces-dir", default_value = "ws", value_name = "PATH")]
     pub workspaces_dir: String,
     #[arg(long = "config", default_value = DEFAULT_CONFIG, value_name = "PATH")]
     pub config: PathBuf,

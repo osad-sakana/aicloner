@@ -1,18 +1,14 @@
 # aicloner
 
-コーディング CLI を複数タスクで同時に走らせる際、毎回 clone する手間をコマンド 1 つで完了させるためのツールです。タスクを追加するたびにリモートの最新ブランチから新しい clone を作成し、ワークスペースを素早く用意・破棄できます。
+単一のリモート Git リポジトリからタスク専用の clone を量産し、`ws/<task>/` 配下で管理する CLI です。`add` 実行時にはタスク名と同名の Git ブランチを自動で用意するため、作業単位をそのままブランチとして扱えます。
 
-単一のリモート Git リポジトリから各タスク専用の clone を生成し、`ws/<task>/` 配下で管理します。`add` 実行時にはタスク名と同じ Git ブランチを自動作成するため、タスクごとの作業内容をそのままブランチとして扱えます。
+## バイナリ配布のインストール
 
-## バイナリ配布版のインストール
-
-GitHub Release から OS に対応したアーカイブを取得し、解凍したバイナリをお好みの場所へ配置してください。ファイル名は以下の通りです。
+GitHub Release から OS に対応したアーカイブを取得し、解凍したバイナリを任意の場所へ配置してください。
 
 - `aicloner-linux-x86_64.tar.gz`
 - `aicloner-macos-arm64.tar.gz`
 - `aicloner-windows-x86_64.zip`
-
-典型的な利用例:
 
 ```bash
 # Linux / macOS
@@ -31,29 +27,27 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ## 初期化 `init`
 
 ```bash
-./target/release/aicloner init --repo-url git@github.com:owner/repo.git \
-    --workspaces-dir ./ws \
-    --config ./.aicloner.toml
+./target/release/aicloner init git@github.com:owner/repo.git
 ```
 
-- `--repo-url` は必須。`ws`・`.aicloner.toml` がデフォルトです。
-- ワークスペースディレクトリが無い場合は自動作成します。
-- 設定ファイルは常に上書き保存されます。
+- カレントディレクトリにリポジトリ名と同名のディレクトリを新規作成します（例: `repo/`）。
+- その配下に `base/`・`ws/`・`.aicloner.toml` をまとめて用意します。
+- ディレクトリ名は `--base-dir` / `--workspaces-dir` で変更できます。設定ファイル名は `--config` で指定します（相対パスは生成したリポジトリ名ディレクトリ基準）。
 
 ## タスク clone 追加 `add`
 
 ```bash
-./target/release/aicloner add login-ui --from main --config ./.aicloner.toml
+./target/release/aicloner add login-ui --from main --config ./repo/.aicloner.toml
 ```
 
 - リモートリポジトリから `--from`（デフォルト `main`）を `--single-branch` で clone します。
-- 同名のブランチがリモートに存在する場合はそのブランチを clone し、存在しない場合のみ `--from` から `git checkout -b <task_name>` で新規作成します。
-- 同名ディレクトリが存在する場合はエラーになります。
+- 同名のリモートブランチが存在する場合はそれを clone し、存在しない場合は `--from` から `git checkout -b <task_name>` で新規作成します。
+- 同名ディレクトリが既にある場合はエラーになります。
 
 ## タスク clone 削除 `rm`
 
 ```bash
-./target/release/aicloner rm login-ui --config ./.aicloner.toml
+./target/release/aicloner rm login-ui --config ./repo/.aicloner.toml
 ```
 
 - `--force` を付けない場合は `y` で確認が必要です。
@@ -62,39 +56,24 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ## 一覧表示 `list`
 
 ```bash
-./target/release/aicloner list --config ./.aicloner.toml
+./target/release/aicloner list --config ./repo/.aicloner.toml
 ```
 
-- `ws` 直下の各タスク名とディレクトリパス、現在のブランチ（取得できた場合）を表形式で出力します。
+- `ws` 直下のタスク名とディレクトリパス、現在のブランチ（取得できた場合）を表形式で出力します。
 
 ## 設定ファイル
 
-`.aicloner.toml` 例:
+`.aicloner.toml` の例:
 
 ```toml
 repo_url = "git@github.com:owner/repo.git"
+base_dir = "base"
 workspaces_dir = "ws"
 ```
 
-相対パスは設定ファイルの設置場所を起点に解決されます。複数の設定ファイルを用意して別々のリポジトリを管理することも可能です。
+相対パスは設定ファイルの設置場所を起点に解決されます。複数の設定ファイルを用意して別のリポジトリを管理することも可能です。
 
-## ディレクトリ移動の例
-
-タスク用 clone へ移動し作業する場合:
-
-```bash
-cd ws/<task_name>
-```
-
-作業後にワークスペースルートへ戻る場合:
-
-```bash
-cd ..
-```
-
-任意のシェルエイリアス（例: `ws(){ cd ws/$1; }`）を設定すると移動を簡略化できます。
-
-## 開発者向け情報
+## 開発向け情報
 
 ### ソースからのビルド
 
@@ -102,7 +81,7 @@ cd ..
 cargo build --release
 ```
 
-生成物は `target/release/aicloner` です。カレントディレクトリ直下のバイナリを利用する想定です。
+生成物は `target/release/aicloner` です。カレントディレクトリ直下に置いたバイナリを利用する想定です。
 
 ### ローカルインストール
 
@@ -110,7 +89,7 @@ cargo build --release
 cargo install --path . --locked
 ```
 
-`~/.cargo/bin` に配置されます。別の場所に置きたい場合はビルド済みバイナリをコピーし、`PATH` に追加してください。
+`~/.cargo/bin` に配置されます。別の場所に置きたい場合はビルド済みバイナリをコピーして `PATH` に追加してください。
 
 ### 開発版アップデート
 
@@ -123,13 +102,7 @@ cargo install --path . --locked --force
 
 ### リリース (GitHub Actions)
 
-`v*` 形式のタグを push すると GitHub Actions が自動的に実行され、Linux/macOS/Windows 向けのバイナリをビルドして GitHub Release に添付します。成果物は以下のファイル名でアップロードされます。
-
-- `aicloner-linux-x86_64.tar.gz`
-- `aicloner-macos-arm64.tar.gz`
-- `aicloner-windows-x86_64.zip`
-
-実行手順の例:
+`v*` 形式のタグを push すると GitHub Actions が自動で実行され、Linux/macOS/Windows 向けのバイナリをビルドして GitHub Release に添付します。
 
 ```bash
 # バージョンを更新したコミットを push 済みと仮定
@@ -137,4 +110,4 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-タグが作成されると `Release` Workflow が走り、成果物付きの Release が自動的に公開されます。
+タグが作成されると `Release` Workflow が走り、成果物付きの Release が公開されます。

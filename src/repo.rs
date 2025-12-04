@@ -22,6 +22,10 @@ impl RepoManager {
         }
     }
 
+    pub fn base_dir(&self) -> PathBuf {
+        self.resolve_path(&self.config.base_dir)
+    }
+
     pub fn workspaces_dir(&self) -> PathBuf {
         self.resolve_path(&self.config.workspaces_dir)
     }
@@ -37,6 +41,14 @@ impl RepoManager {
     }
 
     pub fn init_environment(&self) -> Result<()> {
+        let base_dir = self.base_dir();
+        fs::create_dir_all(&base_dir).with_context(|| {
+            format!(
+                "base ディレクトリの作成に失敗しました: {}",
+                base_dir.display()
+            )
+        })?;
+
         let workspaces_dir = self.workspaces_dir();
         fs::create_dir_all(&workspaces_dir).with_context(|| {
             format!(
@@ -121,7 +133,6 @@ impl RepoManager {
         }
 
         if !force {
-            // y が入力された場合のみ削除を実行
             let prompt = format!(
                 "Remove workspace \"{}\" at \"{}\"? [y/N]: ",
                 task_name,
@@ -177,7 +188,6 @@ impl RepoManager {
                 continue;
             }
             let name = entry.file_name().to_string_lossy().to_string();
-            // タスクディレクトリ自体が clone 先
             let branch = if path.exists() {
                 let repo_str = path.display().to_string();
                 let args = vec![
@@ -227,7 +237,6 @@ impl RepoManager {
 }
 
 fn run_command(program: &str, args: &[String], dir: Option<&Path>) -> Result<()> {
-    // 外部コマンドを実行し、失敗時は anyhow::Error にラップ
     log_command(program, args, dir);
     let mut command = Command::new(program);
     if let Some(dir) = dir {
@@ -251,7 +260,6 @@ fn run_command(program: &str, args: &[String], dir: Option<&Path>) -> Result<()>
 }
 
 fn run_command_capture(program: &str, args: &[String], dir: Option<&Path>) -> Result<String> {
-    // stdout を取得する場合はこちらを利用
     log_command(program, args, dir);
     let mut command = Command::new(program);
     if let Some(dir) = dir {

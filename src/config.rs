@@ -6,6 +6,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub repo_url: String,
+    #[serde(default = "default_base_dir")]
+    pub base_dir: String,
+    #[serde(default = "default_workspaces_dir")]
     pub workspaces_dir: String,
 }
 
@@ -39,4 +42,12 @@ impl Config {
             .with_context(|| format!("設定ファイルの書き込みに失敗しました: {}", path.display()))?;
         Ok(())
     }
+}
+
+fn default_base_dir() -> String {
+    "base".to_string()
+}
+
+fn default_workspaces_dir() -> String {
+    "ws".to_string()
 }
