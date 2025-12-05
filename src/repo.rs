@@ -40,13 +40,36 @@ impl RepoManager {
         base.join(relative)
     }
 
-    pub fn init_environment(&self) -> Result<()> {
+    pub fn init_environment(&self, base_branch: &str) -> Result<()> {
         let base_dir = self.base_dir();
-        fs::create_dir_all(&base_dir).with_context(|| {
-            format!(
-                "base ディレクトリの作成に失敗しました: {}",
-                base_dir.display()
-            )
+        if base_dir.exists() {
+            bail!("base ディレクトリが既に存在します: {}", base_dir.display());
+        }
+        if let Some(parent) = base_dir.parent() {
+            if !parent.as_os_str().is_empty() {
+                fs::create_dir_all(parent).with_context(|| {
+                    format!(
+                        "base ディレクトリ親の作成に失敗しました: {}",
+                        parent.display()
+                    )
+                })?;
+            }
+        }
+
+        let base_dir_str = base_dir.display().to_string();
+        let clone_args = vec![
+            "clone".to_string(),
+            "--branch".to_string(),
+            base_branch.to_string(),
+            "--single-branch".to_string(),
+            self.config.repo_url.clone(),
+            base_dir_str.clone(),
+        ];
+        run_command("git", &clone_args, None).map_err(|err| {
+            if base_dir.exists() {
+                let _ = fs::remove_dir_all(&base_dir);
+            }
+            err
         })?;
 
         let workspaces_dir = self.workspaces_dir();

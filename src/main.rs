@@ -35,7 +35,7 @@ fn main() -> Result<()> {
             };
             config.save(&config_path)?;
             let manager = RepoManager::new(config, config_path.clone());
-            manager.init_environment()?;
+            manager.init_environment("main")?;
             println!("初期化が完了しました: {}", repo_root.display());
         }
         Commands::Add(args) => {

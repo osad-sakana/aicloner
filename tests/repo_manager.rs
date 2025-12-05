@@ -24,6 +24,29 @@ fn git_command(dir: Option<&Path>) -> Command {
 }
 
 #[test]
+fn init_clones_base_main_branch() -> Result<()> {
+    let tmp = TempDir::new()?;
+    let remote = init_remote_repo(&tmp)?;
+
+    let config_path = tmp.path().join(".aicloner.toml");
+    let config = Config {
+        repo_url: remote.to_string_lossy().to_string(),
+        base_dir: "base".to_string(),
+        workspaces_dir: "ws".to_string(),
+    };
+    let manager = RepoManager::new(config, config_path);
+    manager.init_environment("main")?;
+
+    let base_dir = manager.base_dir();
+    assert!(base_dir.exists());
+    let branch = current_branch(&base_dir)?;
+    assert_eq!(branch, "main");
+    let content = fs::read_to_string(base_dir.join("README.md"))?;
+    assert_eq!(normalize_newlines(&content), "hello\n");
+    Ok(())
+}
+
+#[test]
 fn create_clone_and_list_returns_branch() -> Result<()> {
     let tmp = TempDir::new()?;
     let remote = init_remote_repo(&tmp)?;
@@ -36,7 +59,7 @@ fn create_clone_and_list_returns_branch() -> Result<()> {
         workspaces_dir: "ws".to_string(),
     };
     let manager = RepoManager::new(config, config_path);
-    manager.init_environment()?;
+    manager.init_environment("main")?;
     assert!(manager.base_dir().exists());
 
     manager.create_task_clone("task-a", "main")?;
@@ -67,7 +90,7 @@ fn clone_failure_shows_stderr_and_cleans_directory() -> Result<()> {
         workspaces_dir: "ws".to_string(),
     };
     let manager = RepoManager::new(config, config_path);
-    manager.init_environment()?;
+    manager.init_environment("main")?;
 
     let result = manager.create_task_clone("broken", "no-such-branch");
     assert!(result.is_err());
@@ -90,7 +113,7 @@ fn create_new_branch_when_remote_missing() -> Result<()> {
         workspaces_dir: "ws".to_string(),
     };
     let manager = RepoManager::new(config, config_path);
-    manager.init_environment()?;
+    manager.init_environment("main")?;
 
     manager.create_task_clone("task-new", "main")?;
 

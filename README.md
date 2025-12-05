@@ -32,6 +32,7 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 
 - カレントディレクトリにリポジトリ名と同名のディレクトリを新規作成します（例: `repo/`）。
 - その配下に `base/`・`ws/`・`.aicloner.toml` をまとめて用意します。
+- `base/` にはリモートリポジトリの `main` ブランチを `--single-branch` で clone します。
 - ディレクトリ名は `--base-dir` / `--workspaces-dir` で変更できます。設定ファイル名は `--config` で指定します（相対パスは生成したリポジトリ名ディレクトリ基準）。
 
 ## タスク clone 追加 `add`
