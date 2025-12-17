@@ -21,6 +21,7 @@ pub enum Commands {
     Add(AddArgs),
     Rm(RmArgs),
     List(ListArgs),
+    Start(StartArgs),
 }
 
 #[derive(Debug, Args)]
@@ -55,6 +56,14 @@ pub struct RmArgs {
 
 #[derive(Debug, Args)]
 pub struct ListArgs {
+    #[arg(long = "config", default_value = DEFAULT_CONFIG, value_name = "PATH")]
+    pub config: PathBuf,
+}
+
+#[derive(Debug, Args)]
+pub struct StartArgs {
+    #[arg(value_name = "ISSUE_NUMBER")]
+    pub issue_number: u32,
     #[arg(long = "config", default_value = DEFAULT_CONFIG, value_name = "PATH")]
     pub config: PathBuf,
 }

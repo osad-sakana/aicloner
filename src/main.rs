@@ -1,8 +1,10 @@
 mod cli;
 mod config;
 mod repo;
+mod start;
 
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use anyhow::{bail, Result};
 use clap::Parser;
@@ -11,6 +13,7 @@ use crate::{
     cli::{Cli, Commands},
     config::Config,
     repo::RepoManager,
+    start::handle_start,
 };
 
 fn main() -> Result<()> {
@@ -49,11 +52,18 @@ fn main() -> Result<()> {
         Commands::List(args) => {
             let manager = load_manager(&args.config)?;
             let tasks = manager.list_tasks()?;
-            println!("{:<12} {:<40} {}", "TASK", "PATH", "BRANCH");
+            println!("{:<12} {:<40} BRANCH", "TASK", "PATH");
             for info in tasks {
                 let branch = info.branch.unwrap_or_else(|| "-".to_string());
                 println!("{:<12} {:<40} {}", info.name, info.path.display(), branch);
             }
+        }
+        Commands::Start(args) => {
+            ensure_aicloner_repo(&args.config)?;
+            check_gh_installed()?;
+            check_claude_installed()?;
+            let manager = load_manager(&args.config)?;
+            handle_start(args.issue_number, manager)?;
         }
     }
 
@@ -76,7 +86,7 @@ fn resolve_config_path(repo_root: &Path, config: &PathBuf) -> PathBuf {
 fn repo_dir_name(repo_url: &str) -> Result<String> {
     let trimmed = repo_url.trim_end_matches('/');
     let name_part = trimmed
-        .rsplit(|c| c == '/' || c == ':')
+        .rsplit(['/', ':'])
         .next()
         .unwrap_or("");
     let name = name_part
@@ -87,4 +97,36 @@ fn repo_dir_name(repo_url: &str) -> Result<String> {
         bail!("リポジトリ名を URL から抽出できませんでした: {}", repo_url);
     }
     Ok(name)
+}
+
+fn ensure_aicloner_repo(config_path: &Path) -> Result<()> {
+    if !config_path.exists() {
+        bail!(
+            "aicloner リポジトリではありません。{} が見つかりません。\n\
+             先に 'aicloner init' を実行してください。",
+            config_path.display()
+        );
+    }
+    Ok(())
+}
+
+fn check_gh_installed() -> Result<()> {
+    let output = Command::new("gh").arg("--version").output();
+
+    match output {
+        Ok(output) if output.status.success() => Ok(()),
+        _ => bail!(
+            "GitHub CLI (gh) がインストールされていません。\n\
+             https://cli.github.com/ からインストールしてください。"
+        ),
+    }
+}
+
+fn check_claude_installed() -> Result<()> {
+    let output = Command::new("claude").arg("--version").output();
+
+    match output {
+        Ok(output) if output.status.success() => Ok(()),
+        _ => bail!("Claude CLI がインストールされていません。"),
+    }
 }
