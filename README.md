@@ -80,23 +80,43 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ./target/release/aicloner start 1 --config ./repo/.aicloner.toml
 ```
 
-- 指定した番号の GitHub issue に対応するワークスペースを作成し、Claude 対話セッションを起動します。
-- `gh` および `claude` コマンドが必要です。
-- ワークフロー：
-  1. `gh issue view <番号>` で issue の存在を確認
-  2. `aicloner-issue<番号>` の名前でブランチを作成（例: `aicloner-issue1`）
-  3. ベースブランチは `main`（存在しなければ `master`）
-  4. 既存ブランチがある場合はユーザーに確認
-  5. ワークスペースを `ws/aicloner-issue<番号>/` に作成
-  6. Claude セッションを起動し、issue 対応を開始
+- 指定した番号の GitHub issue に対応するワークスペースを作成し、AI ツール対話セッションを起動します。
+- `gh` および AI ツール（`claude`、`codex-cli`、または `gemini-cli`）コマンドが必要です。
 
-典型的な使い方：
+### AI ツールの選択
+
+デフォルトでは Claude を使用しますが、`--codex` または `--gemini` フラグで他のツールを選択できます：
+
+```bash
+# Claude を使用（デフォルト）
+./target/release/aicloner start 1
+
+# Claude を明示的に指定
+./target/release/aicloner start 1 --claude
+
+# Codex を使用
+./target/release/aicloner start 1 --codex
+
+# Gemini を使用
+./target/release/aicloner start 1 --gemini
+```
+
+### ワークフロー
+
+1. `gh issue view <番号>` で issue の存在を確認
+2. `aicloner-issue<番号>` の名前でブランチを作成（例: `aicloner-issue1`）
+3. ベースブランチは `main`（存在しなければ `master`）
+4. 既存ブランチがある場合はユーザーに確認
+5. ワークスペースを `ws/aicloner-issue<番号>/` に作成
+6. 選択した AI ツールのセッションを起動し、issue 対応を開始
+
+### 典型的な使い方
 
 ```bash
 # 1. Open issues を確認
 ./target/release/aicloner issues
 
-# 2. 対応したい issue 番号を選んで作業開始
+# 2. 対応したい issue 番号を選んで作業開始（Claude を使用）
 ./target/release/aicloner start 3
 
 # 3. Claude が起動し、issue #3 の対応を開始
