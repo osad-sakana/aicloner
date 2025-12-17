@@ -6,7 +6,7 @@ mod start;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 
 use crate::{
@@ -64,6 +64,11 @@ fn main() -> Result<()> {
             check_claude_installed()?;
             let manager = load_manager(&args.config)?;
             handle_start(args.issue_number, manager)?;
+        }
+        Commands::Issues(args) => {
+            ensure_aicloner_repo(&args.config)?;
+            check_gh_installed()?;
+            list_issues()?;
         }
     }
 
@@ -129,4 +134,29 @@ fn check_claude_installed() -> Result<()> {
         Ok(output) if output.status.success() => Ok(()),
         _ => bail!("Claude CLI がインストールされていません。"),
     }
+}
+
+fn list_issues() -> Result<()> {
+    let args = vec![
+        "issue".to_string(),
+        "list".to_string(),
+        "--state".to_string(),
+        "open".to_string(),
+    ];
+
+    println!("実行: gh {}", args.join(" "));
+    let output = Command::new("gh")
+        .args(&args)
+        .output()
+        .context("gh issue list の実行に失敗しました")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Issue一覧の取得に失敗しました: {}", stderr.trim());
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    print!("{}", stdout);
+
+    Ok(())
 }
