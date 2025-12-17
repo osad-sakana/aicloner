@@ -68,7 +68,8 @@ fn main() -> Result<()> {
         Commands::Issues(args) => {
             ensure_aicloner_repo(&args.config)?;
             check_gh_installed()?;
-            list_issues()?;
+            let manager = load_manager(&args.config)?;
+            list_issues(&manager)?;
         }
     }
 
@@ -136,7 +137,9 @@ fn check_claude_installed() -> Result<()> {
     }
 }
 
-fn list_issues() -> Result<()> {
+fn list_issues(manager: &RepoManager) -> Result<()> {
+    let base_dir = manager.base_dir();
+
     let args = vec![
         "issue".to_string(),
         "list".to_string(),
@@ -144,9 +147,10 @@ fn list_issues() -> Result<()> {
         "open".to_string(),
     ];
 
-    println!("実行: gh {}", args.join(" "));
+    println!("実行: gh {} (cwd: {})", args.join(" "), base_dir.display());
     let output = Command::new("gh")
         .args(&args)
+        .current_dir(&base_dir)
         .output()
         .context("gh issue list の実行に失敗しました")?;
 

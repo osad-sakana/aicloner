@@ -8,7 +8,7 @@ use crate::repo::RepoManager;
 
 pub fn handle_start(issue_number: u32, manager: RepoManager) -> Result<()> {
     // Issue existence verification
-    verify_issue_exists(issue_number)?;
+    verify_issue_exists(issue_number, &manager)?;
 
     // Determine base branch
     let base_branch = determine_base_branch(&manager)?;
@@ -30,16 +30,19 @@ pub fn handle_start(issue_number: u32, manager: RepoManager) -> Result<()> {
     Ok(())
 }
 
-fn verify_issue_exists(issue_number: u32) -> Result<()> {
+fn verify_issue_exists(issue_number: u32, manager: &RepoManager) -> Result<()> {
+    let base_dir = manager.base_dir();
+
     let args = vec![
         "issue".to_string(),
         "view".to_string(),
         issue_number.to_string(),
     ];
 
-    println!("実行: gh {}", args.join(" "));
+    println!("実行: gh {} (cwd: {})", args.join(" "), base_dir.display());
     let output = Command::new("gh")
         .args(&args)
+        .current_dir(&base_dir)
         .output()
         .context("gh issue view の実行に失敗しました")?;
 
