@@ -14,7 +14,7 @@ pub fn handle_start(issue_number: u32, manager: RepoManager) -> Result<()> {
     let base_branch = determine_base_branch(&manager)?;
 
     // Generate branch name
-    let mut branch_name = format!("aicloner/issue{}", issue_number);
+    let mut branch_name = format!("aicloner-issue{}", issue_number);
 
     // Check for conflicts and resolve
     if manager.task_exists(&branch_name) {
@@ -85,7 +85,7 @@ fn handle_branch_conflict(branch_name: &str, issue_number: u32) -> Result<String
     println!("ブランチ \"{}\" は既に存在します。", branch_name);
     println!("選択してください:");
     println!("  1. 既存のワークスペースに切り替える");
-    println!("  2. 新しいブランチ名で作成する (例: aicloner/issue{}-2)", issue_number);
+    println!("  2. 新しいブランチ名で作成する (例: aicloner-issue{}-2)", issue_number);
     println!("  3. キャンセル");
 
     print!("選択 [1-3]: ");
@@ -123,7 +123,7 @@ fn create_workspace_for_issue(
 
 fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()> {
     let prompt = format!(
-        "あなたは優秀なエンジニアです。issue#{}を対応してください。\n\n\
+        "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
          - ghコマンドを使ってissueを確認すること\n\
          - issueに従って適切に実装すること\n\
          - 疑問点はユーザーに聞くこと\n\

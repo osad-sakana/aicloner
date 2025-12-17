@@ -84,10 +84,10 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 - `gh` および `claude` コマンドが必要です。
 - ワークフロー：
   1. `gh issue view <番号>` で issue の存在を確認
-  2. `aicloner/issue<番号>` の名前でブランチを作成（例: `aicloner/issue1`）
+  2. `aicloner-issue<番号>` の名前でブランチを作成（例: `aicloner-issue1`）
   3. ベースブランチは `main`（存在しなければ `master`）
   4. 既存ブランチがある場合はユーザーに確認
-  5. ワークスペースを `ws/aicloner/issue<番号>/` に作成
+  5. ワークスペースを `ws/aicloner-issue<番号>/` に作成
   6. Claude セッションを起動し、issue 対応を開始
 
 典型的な使い方：
