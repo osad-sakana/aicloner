@@ -122,11 +122,7 @@ fn create_workspace_for_issue(
 }
 
 fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()> {
-    println!("\nClaudeセッションを起動します...");
-    println!("ワークスペース: {}", workspace_path.display());
-    println!("\n以下のプロンプトでClaudeに指示してください:");
-    println!("─────────────────────────────────────────────────────────────");
-    println!(
+    let prompt = format!(
         "あなたは優秀なエンジニアです。issue#{}を対応してください。\n\n\
          - ghコマンドを使ってissueを確認すること\n\
          - issueに従って適切に実装すること\n\
@@ -134,7 +130,9 @@ fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()>
          - ghコマンドを使って実装後にプルリクエストにすること",
         issue_number
     );
-    println!("─────────────────────────────────────────────────────────────\n");
+
+    println!("\nClaudeセッションを起動します...");
+    println!("ワークスペース: {}", workspace_path.display());
 
     // Change to workspace directory and exec claude
     std::env::set_current_dir(workspace_path)
@@ -143,7 +141,7 @@ fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()>
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
-        let err = Command::new("claude").exec();
+        let err = Command::new("claude").arg(&prompt).exec();
         // exec only returns on error
         Err(anyhow::anyhow!("Claude の起動に失敗しました: {}", err))
     }
@@ -151,7 +149,7 @@ fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()>
     #[cfg(not(unix))]
     {
         // For Windows: use spawn and wait
-        let status = Command::new("claude").status()?;
+        let status = Command::new("claude").arg(&prompt).status()?;
 
         if !status.success() {
             bail!("Claude が異常終了しました");
