@@ -73,9 +73,6 @@ pub struct StartArgs {
     /// Use Codex CLI
     #[arg(long = "codex", group = "ai_tool")]
     pub use_codex: bool,
-    /// Use Gemini CLI
-    #[arg(long = "gemini", group = "ai_tool")]
-    pub use_gemini: bool,
 }
 
 impl StartArgs {
@@ -83,8 +80,6 @@ impl StartArgs {
     pub fn selected_tool(&self) -> crate::ai_tool::AiTool {
         if self.use_codex {
             crate::ai_tool::AiTool::Codex
-        } else if self.use_gemini {
-            crate::ai_tool::AiTool::Gemini
         } else {
             // Default to Claude (whether --claude is specified or not)
             crate::ai_tool::AiTool::Claude

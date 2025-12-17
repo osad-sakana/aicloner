@@ -50,7 +50,7 @@ mod tests {
     #[test]
     fn test_command_names() {
         assert_eq!(AiTool::Claude.command_name(), "claude");
-        assert_eq!(AiTool::Codex.command_name(), "codex-cli");
+        assert_eq!(AiTool::Codex.command_name(), "codex");
     }
 
     #[test]

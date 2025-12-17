@@ -60,7 +60,7 @@ aicloner start 1
 
 - **Git** - リポジトリ操作の基盤
 - **GitHub CLI (`gh`)** - Issue 管理と確認用（`issues` / `start` コマンドで使用）
-- **AI CLI** - `claude` または `codex-cli`（`start` コマンドで使用）
+- **AI CLI** - `claude` または `codex`（`start` コマンドで使用）
 
 ---
 
