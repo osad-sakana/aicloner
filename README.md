@@ -64,6 +64,44 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 
 - `ws` 直下のタスク名とディレクトリパス、現在のブランチ（取得できた場合）を表形式で出力します。
 
+## Issue一覧表示 `issues`
+
+```bash
+./target/release/aicloner issues --config ./repo/.aicloner.toml
+```
+
+- GitHub の open issues を一覧表示します。
+- `gh` コマンドが必要です（[GitHub CLI](https://cli.github.com/)）。
+- リポジトリが aicloner で管理されている必要があります。
+
+## Issue対応開始 `start`
+
+```bash
+./target/release/aicloner start 1 --config ./repo/.aicloner.toml
+```
+
+- 指定した番号の GitHub issue に対応するワークスペースを作成し、Claude 対話セッションを起動します。
+- `gh` および `claude` コマンドが必要です。
+- ワークフロー：
+  1. `gh issue view <番号>` で issue の存在を確認
+  2. `aicloner/issue<番号>` の名前でブランチを作成（例: `aicloner/issue1`）
+  3. ベースブランチは `main`（存在しなければ `master`）
+  4. 既存ブランチがある場合はユーザーに確認
+  5. ワークスペースを `ws/aicloner/issue<番号>/` に作成
+  6. Claude セッションを起動し、issue 対応を開始
+
+典型的な使い方：
+
+```bash
+# 1. Open issues を確認
+./target/release/aicloner issues
+
+# 2. 対応したい issue 番号を選んで作業開始
+./target/release/aicloner start 3
+
+# 3. Claude が起動し、issue #3 の対応を開始
+```
+
 ## 設定ファイル
 
 `.aicloner.toml` の例:
