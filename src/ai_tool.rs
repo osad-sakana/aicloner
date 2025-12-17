@@ -7,7 +7,6 @@ pub enum AiTool {
     #[default]
     Claude,
     Codex,
-    Gemini,
 }
 
 impl AiTool {
@@ -16,7 +15,6 @@ impl AiTool {
         match self {
             AiTool::Claude => "claude",
             AiTool::Codex => "codex",
-            AiTool::Gemini => "gemini",
         }
     }
 
@@ -25,7 +23,6 @@ impl AiTool {
         match self {
             AiTool::Claude => "Claude",
             AiTool::Codex => "Codex",
-            AiTool::Gemini => "Gemini",
         }
     }
 
@@ -54,14 +51,12 @@ mod tests {
     fn test_command_names() {
         assert_eq!(AiTool::Claude.command_name(), "claude");
         assert_eq!(AiTool::Codex.command_name(), "codex-cli");
-        assert_eq!(AiTool::Gemini.command_name(), "gemini-cli");
     }
 
     #[test]
     fn test_display_names() {
         assert_eq!(AiTool::Claude.display_name(), "Claude");
         assert_eq!(AiTool::Codex.display_name(), "Codex");
-        assert_eq!(AiTool::Gemini.display_name(), "Gemini");
     }
 
     #[test]
