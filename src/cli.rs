@@ -67,6 +67,29 @@ pub struct StartArgs {
     pub issue_number: u32,
     #[arg(long = "config", default_value = DEFAULT_CONFIG, value_name = "PATH")]
     pub config: PathBuf,
+    /// Use Claude CLI (default)
+    #[arg(long = "claude", group = "ai_tool")]
+    pub use_claude: bool,
+    /// Use Codex CLI
+    #[arg(long = "codex", group = "ai_tool")]
+    pub use_codex: bool,
+    /// Use Gemini CLI
+    #[arg(long = "gemini", group = "ai_tool")]
+    pub use_gemini: bool,
+}
+
+impl StartArgs {
+    /// Returns the selected AI tool (defaults to Claude)
+    pub fn selected_tool(&self) -> crate::ai_tool::AiTool {
+        if self.use_codex {
+            crate::ai_tool::AiTool::Codex
+        } else if self.use_gemini {
+            crate::ai_tool::AiTool::Gemini
+        } else {
+            // Default to Claude (whether --claude is specified or not)
+            crate::ai_tool::AiTool::Claude
+        }
+    }
 }
 
 #[derive(Debug, Args)]

@@ -1,3 +1,4 @@
+mod ai_tool;
 mod cli;
 mod config;
 mod repo;
@@ -61,9 +62,12 @@ fn main() -> Result<()> {
         Commands::Start(args) => {
             ensure_aicloner_repo(&args.config)?;
             check_gh_installed()?;
-            check_claude_installed()?;
+
+            let selected_tool = args.selected_tool();
+            selected_tool.check_installed()?;
+
             let manager = load_manager(&args.config)?;
-            handle_start(args.issue_number, manager)?;
+            handle_start(args.issue_number, selected_tool, manager)?;
         }
         Commands::Issues(args) => {
             ensure_aicloner_repo(&args.config)?;
@@ -125,15 +129,6 @@ fn check_gh_installed() -> Result<()> {
             "GitHub CLI (gh) がインストールされていません。\n\
              https://cli.github.com/ からインストールしてください。"
         ),
-    }
-}
-
-fn check_claude_installed() -> Result<()> {
-    let output = Command::new("claude").arg("--version").output();
-
-    match output {
-        Ok(output) if output.status.success() => Ok(()),
-        _ => bail!("Claude CLI がインストールされていません。"),
     }
 }
 

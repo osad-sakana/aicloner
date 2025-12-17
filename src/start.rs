@@ -4,9 +4,10 @@ use std::process::Command;
 
 use anyhow::{bail, Context, Result};
 
+use crate::ai_tool::AiTool;
 use crate::repo::RepoManager;
 
-pub fn handle_start(issue_number: u32, manager: RepoManager) -> Result<()> {
+pub fn handle_start(issue_number: u32, ai_tool: AiTool, manager: RepoManager) -> Result<()> {
     // Issue existence verification
     verify_issue_exists(issue_number, &manager)?;
 
@@ -24,8 +25,8 @@ pub fn handle_start(issue_number: u32, manager: RepoManager) -> Result<()> {
     // Create workspace
     let workspace_path = create_workspace_for_issue(&manager, &branch_name, &base_branch)?;
 
-    // Launch Claude session
-    launch_claude_session(&workspace_path, issue_number)?;
+    // Launch AI tool session
+    launch_ai_session(&workspace_path, issue_number, ai_tool)?;
 
     Ok(())
 }
@@ -121,39 +122,40 @@ fn create_workspace_for_issue(
     Ok(manager.workspaces_dir().join(branch_name))
 }
 
-fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()> {
+fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool) -> Result<()> {
     let prompt = format!(
         "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
          - ghコマンドを使ってissueを確認すること\n\
          - issueに従って適切に実装すること\n\
          - 適切な粒度でcommitすること\n\
+         - コミットメッセージは日本語で簡潔に書くこと\n\
          - 疑問点はユーザーに聞くこと\n\
          - ghコマンドを使って実装後にプルリクエストにすること",
         issue_number
     );
 
-    println!("\nClaudeセッションを起動します...");
+    println!("\n{}セッションを起動します...", ai_tool.display_name());
     println!("ワークスペース: {}", workspace_path.display());
 
-    // Change to workspace directory and exec claude
+    // Change to workspace directory and exec the AI tool
     std::env::set_current_dir(workspace_path)
         .with_context(|| format!("ワークスペースへの移動に失敗しました: {}", workspace_path.display()))?;
 
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
-        let err = Command::new("claude").arg(&prompt).exec();
+        let err = Command::new(ai_tool.command_name()).arg(&prompt).exec();
         // exec only returns on error
-        Err(anyhow::anyhow!("Claude の起動に失敗しました: {}", err))
+        Err(anyhow::anyhow!("{} の起動に失敗しました: {}", ai_tool.display_name(), err))
     }
 
     #[cfg(not(unix))]
     {
         // For Windows: use spawn and wait
-        let status = Command::new("claude").arg(&prompt).status()?;
+        let status = Command::new(ai_tool.command_name()).arg(&prompt).status()?;
 
         if !status.success() {
-            bail!("Claude が異常終了しました");
+            bail!("{} が異常終了しました", ai_tool.display_name());
         }
         Ok(())
     }
