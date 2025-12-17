@@ -2,8 +2,9 @@ use std::process::Command;
 
 use anyhow::{bail, Result};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AiTool {
+    #[default]
     Claude,
     Codex,
     Gemini,
@@ -43,11 +44,6 @@ impl AiTool {
             ),
         }
     }
-
-    /// Returns the default AI tool (Claude)
-    pub fn default() -> Self {
-        AiTool::Claude
-    }
 }
 
 #[cfg(test)]
@@ -69,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn test_default() {
+    fn test_default_trait() {
         assert_eq!(AiTool::default(), AiTool::Claude);
     }
 }

@@ -11,7 +11,6 @@ use anyhow::{bail, Context, Result};
 use clap::Parser;
 
 use crate::{
-    ai_tool::AiTool,
     cli::{Cli, Commands},
     config::Config,
     repo::RepoManager,
