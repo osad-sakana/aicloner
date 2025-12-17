@@ -15,8 +15,8 @@ impl AiTool {
     pub fn command_name(&self) -> &str {
         match self {
             AiTool::Claude => "claude",
-            AiTool::Codex => "codex-cli",
-            AiTool::Gemini => "gemini-cli",
+            AiTool::Codex => "codex",
+            AiTool::Gemini => "gemini",
         }
     }
 
