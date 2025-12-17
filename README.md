@@ -81,11 +81,11 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 ```
 
 - 指定した番号の GitHub issue に対応するワークスペースを作成し、AI ツール対話セッションを起動します。
-- `gh` および AI ツール（`claude`、`codex-cli`、または `gemini-cli`）コマンドが必要です。
+- `gh` および AI ツール（`claude` または `codex-cli`）コマンドが必要です。
 
 ### AI ツールの選択
 
-デフォルトでは Claude を使用しますが、`--codex` または `--gemini` フラグで他のツールを選択できます：
+デフォルトでは Claude を使用しますが、`--codex` フラグで Codex を選択できます：
 
 ```bash
 # Claude を使用（デフォルト）
@@ -96,9 +96,6 @@ Move-Item .\aicloner.exe C:\tools\aicloner.exe
 
 # Codex を使用
 ./target/release/aicloner start 1 --codex
-
-# Gemini を使用
-./target/release/aicloner start 1 --gemini
 ```
 
 ### ワークフロー
