@@ -1,10 +1,6 @@
-<div align="center">
-  <img src="aicloner_logo.png" alt="aicloner logo" width="200"/>
 
-  # aicloner
-
-  **AI対応タスク別ワークスペース管理ツール**
-</div>
+<img src="aicloner_logo.png" alt="aicloner logo" width="200"/>
+**AI対応タスク別ワークスペース管理ツール**
 
 ![Rust](https://img.shields.io/badge/rust-2021-orange)
 [![Release](https://img.shields.io/github/v/release/osad-sakana/aicloner)](https://github.com/osad-sakana/aicloner/releases)
