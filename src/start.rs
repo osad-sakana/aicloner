@@ -126,6 +126,7 @@ fn launch_claude_session(workspace_path: &Path, issue_number: u32) -> Result<()>
         "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
          - ghコマンドを使ってissueを確認すること\n\
          - issueに従って適切に実装すること\n\
+         - 適切な粒度でcommitすること\n\
          - 疑問点はユーザーに聞くこと\n\
          - ghコマンドを使って実装後にプルリクエストにすること",
         issue_number
