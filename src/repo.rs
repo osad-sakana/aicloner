@@ -30,6 +30,10 @@ impl RepoManager {
         self.resolve_path(&self.config.workspaces_dir)
     }
 
+    pub fn task_exists(&self, task_name: &str) -> bool {
+        self.workspaces_dir().join(task_name).exists()
+    }
+
     fn resolve_path(&self, relative: &str) -> PathBuf {
         let base = self
             .config_path
@@ -65,11 +69,10 @@ impl RepoManager {
             self.config.repo_url.clone(),
             base_dir_str.clone(),
         ];
-        run_command("git", &clone_args, None).map_err(|err| {
+        run_command("git", &clone_args, None).inspect_err(|_err| {
             if base_dir.exists() {
                 let _ = fs::remove_dir_all(&base_dir);
             }
-            err
         })?;
 
         let workspaces_dir = self.workspaces_dir();
@@ -117,11 +120,10 @@ impl RepoManager {
             self.config.repo_url.clone(),
             repo_dir_str.clone(),
         ];
-        run_command("git", &clone_args, None).map_err(|err| {
+        run_command("git", &clone_args, None).inspect_err(|_err| {
             if workspace_dir.exists() {
                 let _ = fs::remove_dir_all(&workspace_dir);
             }
-            err
         })?;
 
         if remote_branch_exists {
