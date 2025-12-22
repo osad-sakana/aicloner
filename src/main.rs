@@ -67,7 +67,7 @@ fn main() -> Result<()> {
             selected_tool.check_installed()?;
 
             let manager = load_manager(&args.config)?;
-            handle_start(args.issue_number, selected_tool, manager)?;
+            handle_start(args.issue_number, selected_tool, manager, args.plan)?;
         }
         Commands::Issues(args) => {
             ensure_aicloner_repo(&args.config)?;

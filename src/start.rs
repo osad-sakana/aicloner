@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Result};
 use crate::ai_tool::AiTool;
 use crate::repo::RepoManager;
 
-pub fn handle_start(issue_number: u32, ai_tool: AiTool, manager: RepoManager) -> Result<()> {
+pub fn handle_start(issue_number: u32, ai_tool: AiTool, manager: RepoManager, plan: bool) -> Result<()> {
     // Issue existence verification
     verify_issue_exists(issue_number, &manager)?;
 
@@ -26,7 +26,7 @@ pub fn handle_start(issue_number: u32, ai_tool: AiTool, manager: RepoManager) ->
     let workspace_path = create_workspace_for_issue(&manager, &branch_name, &base_branch)?;
 
     // Launch AI tool session
-    launch_ai_session(&workspace_path, issue_number, ai_tool)?;
+    launch_ai_session(&workspace_path, issue_number, ai_tool, plan)?;
 
     Ok(())
 }
@@ -122,17 +122,30 @@ fn create_workspace_for_issue(
     Ok(manager.workspaces_dir().join(branch_name))
 }
 
-fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool) -> Result<()> {
-    let prompt = format!(
-        "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
-         - ghコマンドを使ってissueを確認すること\n\
-         - issueに従って適切に実装すること\n\
-         - 適切な粒度でcommitすること\n\
-         - コミットメッセージは日本語で簡潔に書くこと\n\
-         - 疑問点はユーザーに聞くこと\n\
-         - ghコマンドを使って実装後にプルリクエストにすること",
-        issue_number
-    );
+fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, plan: bool) -> Result<()> {
+    let prompt = if plan {
+        format!(
+            "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
+             - ghコマンドを使ってissueを確認すること\n\
+             - issueに従って適切に実装すること\n\
+             - 適切な粒度でcommitすること\n\
+             - コミットメッセージは日本語で簡潔に書くこと\n\
+             - 疑問点はユーザーに聞くこと\n\
+             - ghコマンドを使って実装後にプルリクエストにすること",
+            issue_number
+        )
+    } else {
+        format!(
+            "あなたは優秀なエンジニアです。issue#{}を対応してください。\n\n\
+             - ghコマンドを使ってissueを確認すること\n\
+             - issueに従って適切に実装すること\n\
+             - 適切な粒度でcommitすること\n\
+             - コミットメッセージは日本語で簡潔に書くこと\n\
+             - 疑問点はユーザーに聞くこと\n\
+             - ghコマンドを使って実装後にプルリクエストにすること",
+            issue_number
+        )
+    };
 
     println!("\n{}セッションを起動します...", ai_tool.display_name());
     println!("ワークスペース: {}", workspace_path.display());

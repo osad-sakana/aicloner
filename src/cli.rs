@@ -73,6 +73,9 @@ pub struct StartArgs {
     /// Use Codex CLI
     #[arg(long = "codex", group = "ai_tool")]
     pub use_codex: bool,
+    /// Start with plan mode
+    #[arg(long = "plan")]
+    pub plan: bool,
 }
 
 impl StartArgs {
