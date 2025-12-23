@@ -131,7 +131,8 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
              - 適切な粒度でcommitすること\n\
              - コミットメッセージは日本語で簡潔に書くこと\n\
              - 疑問点はユーザーに聞くこと\n\
-             - ghコマンドを使って実装後にプルリクエストにすること",
+             - ghコマンドを使って実装後にプルリクエストにすること\n\
+             - プルリクエストには該当issueを紐づけること",
             issue_number
         )
     } else {
@@ -142,7 +143,8 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
              - 適切な粒度でcommitすること\n\
              - コミットメッセージは日本語で簡潔に書くこと\n\
              - 疑問点はユーザーに聞くこと\n\
-             - ghコマンドを使って実装後にプルリクエストにすること",
+             - ghコマンドを使って実装後にプルリクエストにすること\n\
+             - プルリクエストには該当issueを紐づけること",
             issue_number
         )
     };
