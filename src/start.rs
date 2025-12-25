@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
+use which::which;
 
 use crate::ai_tool::AiTool;
 use crate::repo::RepoManager;
@@ -123,6 +124,22 @@ fn create_workspace_for_issue(
 }
 
 fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, plan: bool) -> Result<()> {
+    // Check if the AI tool command exists in PATH
+    let command_name = ai_tool.command_name();
+    if which(command_name).is_err() {
+        bail!(
+            "{} コマンドが見つかりません。\n\
+             \n\
+             {} を使用するには、まず {} CLI をインストールする必要があります。\n\
+             インストール方法については公式ドキュメントを参照してください。\n\
+             \n\
+             インストール後、コマンドが PATH に含まれていることを確認してください。",
+            command_name,
+            ai_tool.display_name(),
+            ai_tool.display_name()
+        );
+    }
+
     let prompt = if plan {
         format!(
             "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
