@@ -148,9 +148,12 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
              - 適切な粒度でcommitすること\n\
              - コミットメッセージは日本語で簡潔に書くこと\n\
              - 疑問点はユーザーに聞くこと\n\
-             - ghコマンドを使って実装後にプルリクエストにすること\n\
-             - プルリクエストには該当issueを紐づけること",
-            issue_number
+             - 実装後にプルリクエストを作成する際は、必ず以下の手順を守ること:\n\
+               1. すべての変更をcommitしてワーキングツリーをクリーンにする（git statusで確認）\n\
+               2. リモートブランチにpushする（git push -u origin ブランチ名）\n\
+               3. gh pr createコマンドを実行してプルリクエストを作成する\n\
+               4. プルリクエストには該当issueを紐づけること（Closes #{}を本文に含める）",
+            issue_number, issue_number
         )
     } else {
         format!(
@@ -160,9 +163,12 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
              - 適切な粒度でcommitすること\n\
              - コミットメッセージは日本語で簡潔に書くこと\n\
              - 疑問点はユーザーに聞くこと\n\
-             - ghコマンドを使って実装後にプルリクエストにすること\n\
-             - プルリクエストには該当issueを紐づけること",
-            issue_number
+             - 実装後にプルリクエストを作成する際は、必ず以下の手順を守ること:\n\
+               1. すべての変更をcommitしてワーキングツリーをクリーンにする（git statusで確認）\n\
+               2. リモートブランチにpushする（git push -u origin ブランチ名）\n\
+               3. gh pr createコマンドを実行してプルリクエストを作成する\n\
+               4. プルリクエストには該当issueを紐づけること（Closes #{}を本文に含める）",
+            issue_number, issue_number
         )
     };
 
