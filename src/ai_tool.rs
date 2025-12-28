@@ -18,6 +18,23 @@ impl AiTool {
         }
     }
 
+    /// Returns the command name with platform-specific adjustments
+    /// On Windows, this adds .cmd extension for npm-installed commands
+    pub fn executable_command(&self) -> String {
+        let base_name = self.command_name();
+
+        #[cfg(windows)]
+        {
+            // On Windows, try to use .cmd extension for npm-installed commands
+            format!("{}.cmd", base_name)
+        }
+
+        #[cfg(not(windows))]
+        {
+            base_name.to_string()
+        }
+    }
+
     /// Returns a human-readable display name
     pub fn display_name(&self) -> &str {
         match self {
@@ -28,7 +45,10 @@ impl AiTool {
 
     /// Checks if the tool is installed and available
     pub fn check_installed(&self) -> Result<()> {
-        let output = Command::new(self.command_name())
+        let command_name = self.command_name();
+        let executable = self.executable_command();
+
+        let output = Command::new(&executable)
             .arg("--version")
             .output();
 
@@ -37,7 +57,7 @@ impl AiTool {
             _ => bail!(
                 "{} CLI ({}) がインストールされていません。",
                 self.display_name(),
-                self.command_name()
+                command_name
             ),
         }
     }

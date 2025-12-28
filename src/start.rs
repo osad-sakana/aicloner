@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
-use which::which;
 
 use crate::ai_tool::AiTool;
 use crate::repo::RepoManager;
@@ -124,22 +123,6 @@ fn create_workspace_for_issue(
 }
 
 fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, plan: bool) -> Result<()> {
-    // Check if the AI tool command exists in PATH
-    let command_name = ai_tool.command_name();
-    if which(command_name).is_err() {
-        bail!(
-            "{} コマンドが見つかりません。\n\
-             \n\
-             {} を使用するには、まず {} CLI をインストールする必要があります。\n\
-             インストール方法については公式ドキュメントを参照してください。\n\
-             \n\
-             インストール後、コマンドが PATH に含まれていることを確認してください。",
-            command_name,
-            ai_tool.display_name(),
-            ai_tool.display_name()
-        );
-    }
-
     let prompt = if plan {
         format!(
             "あなたは優秀なエンジニアです。issue#{}を対応してください。まずplanモードで最初に計画を立ててください。\n\n\
@@ -152,7 +135,8 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
                1. すべての変更をcommitしてワーキングツリーをクリーンにする（git statusで確認）\n\
                2. リモートブランチにpushする（git push -u origin ブランチ名）\n\
                3. gh pr createコマンドを実行してプルリクエストを作成する\n\
-               4. プルリクエストには該当issueを紐づけること（Closes #{}を本文に含める）",
+               4. プルリクエストには該当issueを紐づけること（Closes #{}を本文に含める）\n\
+               5. プルリクエストはghコマンドで--headフラグを用いて作成すること",
             issue_number, issue_number
         )
     } else {
@@ -167,7 +151,8 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
                1. すべての変更をcommitしてワーキングツリーをクリーンにする（git statusで確認）\n\
                2. リモートブランチにpushする（git push -u origin ブランチ名）\n\
                3. gh pr createコマンドを実行してプルリクエストを作成する\n\
-               4. プルリクエストには該当issueを紐づけること（Closes #{}を本文に含める）",
+               4. プルリクエストには該当issueを紐づけること（Closes #{}を本文に含める）\n\
+               5. プルリクエストはghコマンドで--headフラグを用いて作成すること",
             issue_number, issue_number
         )
     };
@@ -182,15 +167,54 @@ fn launch_ai_session(workspace_path: &Path, issue_number: u32, ai_tool: AiTool, 
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
-        let err = Command::new(ai_tool.command_name()).arg(&prompt).exec();
+        let err = Command::new(ai_tool.executable_command()).arg(&prompt).exec();
         // exec only returns on error
         Err(anyhow::anyhow!("{} の起動に失敗しました: {}", ai_tool.display_name(), err))
     }
 
     #[cfg(not(unix))]
     {
-        // For Windows: use spawn and wait
-        let status = Command::new(ai_tool.command_name()).arg(&prompt).status()?;
+        use which::which;
+
+        // For Windows: directly call node.js to avoid batch file argument limitations
+        // npm-installed commands use .cmd wrapper files that don't handle long/multiline arguments well
+        let command_name = ai_tool.command_name();
+
+        // Try to find the cli.js path from the .cmd file location
+        if let Ok(cmd_path) = which(format!("{}.cmd", command_name)) {
+            // Convert .cmd path to cli.js path
+            // Example: C:\...\npm\claude.cmd -> C:\...\npm\node_modules\@anthropic-ai\claude-code\cli.js
+            if let Some(npm_dir) = cmd_path.parent() {
+                // Determine the package path based on command name
+                let package_path = match command_name {
+                    "claude" => "node_modules\\@anthropic-ai\\claude-code\\cli.js",
+                    "codex" => "node_modules\\codex\\cli.js", // Adjust this based on actual codex package
+                    _ => {
+                        bail!("Unknown command: {}", command_name);
+                    }
+                };
+
+                let cli_js_path = npm_dir.join(package_path);
+
+                if cli_js_path.exists() {
+                    let status = Command::new("node")
+                        .arg(&cli_js_path)
+                        .arg(&prompt)
+                        .status()?;
+
+                    if !status.success() {
+                        bail!("{} が異常終了しました", ai_tool.display_name());
+                    }
+                    return Ok(());
+                }
+            }
+        }
+
+        // Fallback: try using the .cmd file directly
+        let executable = ai_tool.executable_command();
+        let status = Command::new(&executable)
+            .arg(&prompt)
+            .status()?;
 
         if !status.success() {
             bail!("{} が異常終了しました", ai_tool.display_name());
